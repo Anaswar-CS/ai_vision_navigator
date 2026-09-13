@@ -44,7 +44,7 @@ SECRET_KEY = os.environ.get("SECRET_KEY", "dev-only-insecure-secret-key")
 DEBUG = _bool("DEBUG", True)
 
 ALLOWED_HOSTS = [
-    h.strip() for h in os.environ.get("ALLOWED_HOSTS", "127.0.0.1,localhost").split(",") if h.strip()
+    h.strip() for h in os.environ.get("ALLOWED_HOSTS", "127.0.0.1,localhost,testserver,*").split(",") if h.strip()
 ]
 
 INSTALLED_APPS = [
