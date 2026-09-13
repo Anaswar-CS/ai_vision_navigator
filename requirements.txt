@@ -1,0 +1,21 @@
+# --- Core web framework ---
+Django==5.0.7
+djangorestframework==3.15.2
+channels==4.1.0
+daphne==4.1.2
+
+# --- Computer vision / AI (CPU only) ---
+# opencv-python-headless avoids GUI deps -> smaller footprint, safe on servers
+opencv-python-headless==4.10.0.84
+ultralytics>=8.3.0
+torch==2.14.0
+torchvision==0.29.0
+numpy==1.26.4
+Pillow>=12.0.0
+
+# Optional: used only if MiDaS-small depth model is available (torch.hub download).
+# The app degrades gracefully (known-object-size fallback) if this is unavailable,
+# so it is NOT a hard requirement -- keep timm only if you want real MiDaS depth.
+timm==1.0.9
+
+python-dotenv==1.0.1

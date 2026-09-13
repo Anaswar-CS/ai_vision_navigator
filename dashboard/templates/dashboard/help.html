@@ -1,0 +1,88 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Help & Project Overview — AI Vision Navigator{% endblock %}
+
+{% block content %}
+<section class="calibration-container">
+    <h1 style="font-family: var(--font-heading); font-size: 2.4rem; font-weight: 800; margin-bottom: 12px; display: flex; align-items: center; gap: 12px;">
+        <svg class="svg-icon svg-icon-lg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <span>Help &amp; Hardware Documentation</span>
+    </h1>
+
+    <div class="how-it-works" style="margin-top: 24px; padding: 28px;">
+        <h3 style="margin-bottom: 12px; font-family: var(--font-heading); color: var(--accent-cyan); font-size: 1.3rem; display: flex; align-items: center; gap: 8px;">
+            <svg class="svg-icon" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+            <span>Target Client Hardware Specification</span>
+        </h3>
+        <p style="color: var(--text-muted); font-size: 1rem; line-height: 1.6;">
+            AI Vision Navigator is engineered to execute locally on client hardware without requiring external GPUs:
+        </p>
+        <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 14px;">
+            <span class="footer-badge" style="font-size: 0.88rem; padding: 8px 14px;">Intel Core i5 CPU</span>
+            <span class="footer-badge" style="font-size: 0.88rem; padding: 8px 14px;">8 GB System RAM</span>
+            <span class="footer-badge" style="font-size: 0.88rem; padding: 8px 14px;">Solid State Drive (SSD)</span>
+            <span class="footer-badge" style="font-size: 0.88rem; padding: 8px 14px;">Standard RGB Laptop Webcam</span>
+            <span class="footer-badge" style="font-size: 0.88rem; padding: 8px 14px;">Integrated Graphics (CPU-Only Pipeline)</span>
+        </div>
+    </div>
+
+    <h2 style="font-family: var(--font-heading); font-size: 1.6rem; margin-top: 40px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+        <svg class="svg-icon" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+        <span>Supported Target Classes</span>
+    </h2>
+    <div class="object-chips">
+        <span class="chip">Laptop</span>
+        <span class="chip">Computer</span>
+        <span class="chip">Mobile Phone</span>
+        <span class="chip">Table / Desk</span>
+        <span class="chip">Pen</span>
+        <span class="chip">Pencil</span>
+        <span class="chip">Spectacles</span>
+        <span class="chip">Water Bottle</span>
+        <span class="chip">Medicine Box</span>
+        <span class="chip">Notebook / Book</span>
+        <span class="chip">Bag / Backpack</span>
+        <span class="chip">Instrumentation Box</span>
+    </div>
+
+    <h2 style="font-family: var(--font-heading); font-size: 1.6rem; margin-top: 40px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+        <svg class="svg-icon" viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+        <span>Voice Commands Cheat Sheet</span>
+    </h2>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px;">
+        <div style="background: rgba(0,0,0,0.3); padding: 14px 18px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+            🗣️ <em>"Where is my mobile?"</em> / <em>"Find my phone."</em>
+        </div>
+        <div style="background: rgba(0,0,0,0.3); padding: 14px 18px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+            🗣️ <em>"Where is my laptop?"</em> / <em>"Where is my computer?"</em>
+        </div>
+        <div style="background: rgba(0,0,0,0.3); padding: 14px 18px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+            🗣️ <em>"Find my book."</em> / <em>"Where is my notebook?"</em>
+        </div>
+        <div style="background: rgba(0,0,0,0.3); padding: 14px 18px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+            🗣️ <em>"Where is my bag?"</em> / <em>"Find my water bottle."</em>
+        </div>
+        <div style="background: rgba(0,0,0,0.3); padding: 14px 18px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+            🗣️ <em>"Where are my spectacles?"</em> / <em>"Find the pen."</em>
+        </div>
+        <div style="background: rgba(0,0,0,0.3); padding: 14px 18px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+            🗣️ <em>"Start tracking."</em> /  failure <em>"Stop tracking."</em>
+        </div>
+    </div>
+
+    <h2 style="font-family: var(--font-heading); font-size: 1.6rem; margin-top: 40px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+        <svg class="svg-icon" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <span>On-Device Privacy Architecture</span>
+    </h2>
+    <p style="color: var(--text-muted); line-height: 1.6; font-size: 1rem;">
+        Your webcam feed is analyzed in memory on your device using WebSocket frame streams. Video frames are processed in RAM and discarded immediately. No video images or voice recordings are stored or transmitted.
+    </p>
+
+    <h2 id="limitations" style="font-family: var(--font-heading); font-size: 1.6rem; margin-top: 40px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+        <svg class="svg-icon" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <span>Safety &amp; Limitations Notice</span>
+    </h2>
+    <div class="disclaimer">
+        ⚠️ <strong>Notice:</strong> This application provides experimental AI vision spatial guidance. Monocular depth predictions and object distance labels are approximate. Do not use for safety-critical navigation or obstacle avoidance for visually impaired individuals without human supervision.
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,132 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+{% block title %}Live Spatial Vision HUD — AI Vision Navigator{% endblock %}
+
+{% block content %}
+<section class="camera-page" id="app-root"
+         data-ws-url="{% if request.is_secure %}wss{% else %}ws{% endif %}://{{ request.get_host }}/ws/vision/"
+         data-camera-width="{{ camera_width }}"
+         data-camera-height="{{ camera_height }}"
+         data-default-ai-fps="{{ default_ai_fps }}">
+
+    <div class="camera-panel">
+        <div class="video-wrap">
+            <div class="hud-corner hud-tl"></div>
+            <div class="hud-corner hud-tr"></div>
+            <div class="hud-corner hud-bl"></div>
+            <div class="hud-corner hud-br"></div>
+
+            <video id="webcam" autoplay playsinline muted aria-label="Live camera feed"></video>
+            <canvas id="overlay"></canvas>
+            
+            <div id="camera-placeholder" class="camera-placeholder">
+                <div class="camera-placeholder-icon">
+                    <svg class="svg-icon svg-icon-xl" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                </div>
+                <p style="font-weight: 700; font-size: 1.2rem; color: var(--text-main);">Spatial Camera Feed Offline</p>
+                <p style="max-width: 340px; font-size: 0.92rem; color: var(--text-muted);">
+                    Click "Capture Video" below to activate your webcam and start real-time YOLO object detection &amp; depth estimation.
+                </p>
+            </div>
+        </div>
+
+        <div class="status-bar" role="status" aria-live="polite">
+            <span class="status-pill">Webcam <span id="status-camera" class="dot dot-off"></span></span>
+            <span class="status-pill">Spatial AI Engine <span id="status-ai" class="dot dot-off"></span></span>
+            <span class="status-pill">Voice Listener <span id="status-voice" class="dot dot-off"></span></span>
+            <span class="status-pill">Target Tracking <span id="status-tracking" class="dot dot-off"></span></span>
+        </div>
+
+        <div class="controls">
+            <button id="btn-capture" class="btn btn-primary" accesskey="space">
+                <svg class="svg-icon" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                <span>Capture Video</span>
+            </button>
+            <button id="btn-stop" class="btn btn-danger" disabled>
+                <svg class="svg-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><rect x="9" y="9" width="6" height="6"/></svg>
+                <span>Stop Camera</span>
+            </button>
+            <button id="btn-mic" class="btn btn-mic" accesskey="v" disabled>
+                <svg class="svg-icon" viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+                <span>Ask AI Voice</span>
+            </button>
+            <select id="ai-fps-select" aria-label="AI processing frames per second">
+                {% for fps in ai_fps_options %}
+                <option value="{{ fps }}" {% if fps == default_ai_fps %}selected{% endif %}>⚡ {{ fps }} AI FPS</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+
+    <aside class="target-panel" aria-live="polite">
+        <h2>
+            <svg class="svg-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+            <span>Target Navigation</span>
+        </h2>
+        
+        <div id="target-empty" class="target-card">
+            <p class="target-empty-text">
+                Click <strong>Ask AI Voice</strong> or type a command like <em>"Where is my mobile phone?"</em> below to lock target tracking.
+            </p>
+        </div>
+
+        <div id="target-info" class="target-card hidden">
+            <div class="target-name" id="target-name">—</div>
+            
+            <div class="target-metric">
+                <span class="target-metric-label">Direction:</span>
+                <span class="target-metric-val"><span id="target-direction" class="badge-direction">—</span></span>
+            </div>
+            <div class="target-metric">
+                <span class="target-metric-label">Estimated Distance:</span>
+                <span class="target-metric-val" id="target-distance" style="font-family: var(--font-mono); color: var(--accent-cyan);">—</span>
+            </div>
+            <div class="target-metric">
+                <span class="target-metric-label">Tracking Vector:</span>
+                <span class="target-metric-val" id="target-status">—</span>
+            </div>
+            <div class="target-metric">
+                <span class="target-metric-label">Detection Confidence:</span>
+                <span class="target-metric-val" id="target-confidence" style="font-family: var(--font-mono);">—</span>
+            </div>
+        </div>
+
+        <form id="text-command-form" class="text-command-form">
+            <input type="text" id="text-command" placeholder="Type: Where is my phone?" autocomplete="off" aria-label="Voice or text query">
+            <button type="submit" class="btn btn-secondary">
+                <svg class="svg-icon" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </button>
+        </form>
+
+        <div id="voice-transcript" class="voice-transcript" aria-live="polite">
+            <svg class="svg-icon" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <span>Voice transcript &amp; spatial guidance alerts will appear here.</span>
+        </div>
+
+        <details class="dev-panel">
+            <summary>⚙️ Hardware &amp; Diagnostic Performance Metrics</summary>
+            <ul id="dev-panel-list">
+                <li>Camera: <span id="dev-camera">Inactive</span></li>
+                <li>AI Engine: <span id="dev-ai">Inactive</span></li>
+                <li>YOLO Model: <span id="dev-model">yolov8n</span></li>
+                <li>Target FPS: <span id="dev-fps">—</span></li>
+                <li>Inference: <span id="dev-inference">—</span></li>
+                <li>Depth Calc: <span id="dev-depth">—</span></li>
+                <li>RAM Profile: <span>Low (8 GB)</span></li>
+                <li>Processor: <span>Intel i5 CPU</span></li>
+            </ul>
+        </details>
+    </aside>
+</section>
+
+<p class="keyboard-hint">
+    Keyboard Shortcuts: <kbd>Space</kbd> Start/Stop Camera &middot; <kbd>V</kbd> Ask AI Voice &middot; <kbd>Esc</kbd> Clear Target Lock
+</p>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/overlay.js' %}"></script>
+<script src="{% static 'js/camera.js' %}"></script>
+<script src="{% static 'js/voice.js' %}"></script>
+<script src="{% static 'js/navigation.js' %}"></script>
+{% endblock %}

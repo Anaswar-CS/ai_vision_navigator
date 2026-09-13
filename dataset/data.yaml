@@ -1,0 +1,21 @@
+# AI Vision Navigator — custom object dataset config
+# Used by Ultralytics YOLO for fine-tuning models/custom/best.pt
+#
+# Paths are relative to this file's location (dataset/).
+
+path: C:/Users/anasw/Downloads/ai_vision_navigator/dataset
+train: images/train
+val: images/val
+test: images/test
+
+# Class indices are FIXED once labeling starts.
+# Do not reorder this list after annotation begins — it will silently
+# corrupt existing labels (label files store the index, not the name).
+names:
+  0: pen
+  1: pencil
+  2: spectacles
+  3: medicine_box
+  4: instrumentation_box
+  5: computer_tower
+  6: computer_monitor

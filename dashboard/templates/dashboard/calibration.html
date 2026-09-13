@@ -1,0 +1,88 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Distance Calibration — AI Vision Navigator{% endblock %}
+
+{% block content %}
+<section class="calibration-container">
+    <div style="margin-bottom: 24px;">
+        <h1 style="font-family: var(--font-heading); font-size: 2.2rem; font-weight: 800; margin-bottom: 8px; display: flex; align-items: center; gap: 12px;">
+            <svg class="svg-icon svg-icon-lg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+            <span>Monocular Depth Calibration</span>
+        </h1>
+        <p class="tagline" style="text-align: left; margin-bottom: 0;">
+            Fine-tune physical distance mapping for your laptop camera lens by saving reference calibration points.
+        </p>
+    </div>
+
+    <div class="how-it-works" style="margin-top: 0; margin-bottom: 32px; padding: 24px;">
+        <h3 style="margin-bottom: 12px; font-family: var(--font-heading); color: var(--accent-cyan);">Calibration Protocol</h3>
+        <div class="workflow-steps-grid" style="margin-bottom: 0;">
+            <div class="step-card">
+                <div class="step-number">1</div>
+                <h4>Position Reference Object</h4>
+                <p>Place an item (laptop or bottle) at a measured physical distance (e.g. 1.0 m) from your camera.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">2</div>
+                <h4>Note Raw Depth Value</h4>
+                <p>Check the raw depth value output shown in Developer Mode or via the Test Image Debugger.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">3</div>
+                <h4>Save Pair</h4>
+                <p>Enter the distance and raw depth value below. Recommended checkpoints: <strong>0.5 m, 1.0 m, 1.5 m, 2.0 m</strong>.</p>
+            </div>
+        </div>
+    </div>
+
+    <form method="post" class="calibration-form">
+        {% csrf_token %}
+        <div>
+            <label for="reference_distance" style="color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 6px;">Actual Physical Distance (Meters):</label>
+            <input type="number" step="0.1" min="0.1" name="reference_distance" id="reference_distance" placeholder="e.g. 1.0" required style="width: 100%;">
+        </div>
+
+        <div>
+            <label for="depth_value" style="color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 6px;">Observed Raw Depth Value:</label>
+            <input type="number" step="0.001" min="0.001" name="depth_value" id="depth_value" placeholder="e.g. 0.425" required style="width: 100%;">
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="align-self: start; margin-top: 8px;">
+            <svg class="svg-icon" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            <span>Save Reference Checkpoint</span>
+        </button>
+    </form>
+
+    <h2 style="font-family: var(--font-heading); font-size: 1.5rem; margin-top: 40px; margin-bottom: 16px;">
+        Saved Calibration Data Points
+    </h2>
+    
+    {% if points %}
+    <table class="calibration-table">
+        <thead>
+            <tr>
+                <th>Physical Distance (m)</th>
+                <th>Raw Depth Value</th>
+                <th>Timestamp</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for point in points %}
+            <tr>
+                <td><strong style="color: var(--accent-cyan);">{{ point.reference_distance }} m</strong></td>
+                <td><code style="font-family: var(--font-mono); font-weight: 600;">{{ point.depth_value }}</code></td>
+                <td style="color: var(--text-muted); font-size: 0.9rem;">{{ point.created_at }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <p class="message success" style="margin-top: 20px;">
+        <svg class="svg-icon" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        <span>Custom calibration active with {{ points|length }} checkpoint(s). Monocular depth mapping calibrated.</span>
+    </p>
+    {% else %}
+    <p class="target-empty-text" style="margin-top: 16px;">
+        No calibration checkpoints saved yet. Distance estimates currently rely on default monocular depth scaling.
+    </p>
+    {% endif %}
+</section>
+{% endblock %}

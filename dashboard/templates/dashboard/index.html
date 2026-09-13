@@ -1,0 +1,162 @@
+{% extends "dashboard/base.html" %}
+{% block title %}AI Vision Navigator — Real-Time Spatial AI & Distance Guidance{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <div class="hero-badge">
+        <span class="dot-live"></span>
+        <span>Real-Time Spatial AI Engine Active</span>
+    </div>
+
+    <h1>
+        Intelligent Vision &amp;<br>
+        <span class="gradient-text">Voice Spatial Guidance</span>
+    </h1>
+
+    <p class="tagline">
+        Turn your laptop webcam into an intelligent spatial assistant. Detect objects in real-time, estimate physical distances using depth AI, and query locations with voice commands.
+    </p>
+
+    <div class="hero-actions">
+        <a class="btn btn-primary btn-large" href="{% url 'dashboard:camera' %}" accesskey="c">
+            <svg class="svg-icon svg-icon-lg" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            <span>Open Live Camera</span>
+        </a>
+        <a class="btn btn-secondary btn-large" href="#how-it-works">
+            <svg class="svg-icon svg-icon-lg" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            <span>Explore Features</span>
+        </a>
+    </div>
+
+    <div class="stats-ribbon">
+        <div class="stat-item">
+            <div class="stat-val">30 FPS</div>
+            <div class="stat-lbl">Real-Time Ingestion</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-val">&lt; 150 ms</div>
+            <div class="stat-lbl">CPU Dual-Model Latency</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-val">11 Classes</div>
+            <div class="stat-lbl">Target Object Support</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-val">100% Local</div>
+            <div class="stat-lbl">Private On-Device Processing</div>
+        </div>
+    </div>
+</section>
+
+<div class="features-grid">
+    <div class="feature-card">
+        <div class="feature-icon-wrapper">
+            <svg class="svg-icon svg-icon-lg" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </div>
+        <h3>Real-Time YOLO Detection</h3>
+        <p>Lightweight YOLOv8 model optimized for CPU architecture detects target items instantaneously across video frames.</p>
+    </div>
+    <div class="feature-card">
+        <div class="feature-icon-wrapper">
+            <svg class="svg-icon svg-icon-lg" viewBox="0 0 24 24"><path d="M2 12h20M6 8v8M18 8v8M12 10v4"/></svg>
+        </div>
+        <h3>Monocular Depth Estimation</h3>
+        <p>MiDaS neural network calculates continuous spatial depth maps to predict physical distances in meters.</p>
+    </div>
+    <div class="feature-card">
+        <div class="feature-icon-wrapper">
+            <svg class="svg-icon svg-icon-lg" viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+        </div>
+        <h3>Voice Search &amp; Guidance</h3>
+        <p>Ask naturally e.g. <em>"Where is my mobile phone?"</em> to lock target objects and receive directional audio guidance (Left/Center/Right).</p>
+    </div>
+    <div class="feature-card">
+        <div class="feature-icon-wrapper">
+            <svg class="svg-icon svg-icon-lg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+        </div>
+        <h3>Movement &amp; Proximity Tracking</h3>
+        <p>Continuously monitors target object vector state, determining if you are getting closer, turning, or backing away.</p>
+    </div>
+</div>
+
+<section class="objects-section">
+    <div style="margin-bottom: 20px;">
+        <h2>
+            <svg class="svg-icon" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+            <span>Supported Target Categories</span>
+        </h2>
+        <p style="color: var(--text-muted); font-size: 0.95rem;">
+            Place any of the following items in front of your camera for real-time tracking and spatial navigation:
+        </p>
+    </div>
+
+    <div class="objects-categories-grid">
+        <div class="category-group">
+            <div class="category-title">
+                <svg class="svg-icon" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                <span>Tech &amp; Electronics</span>
+            </div>
+            <div class="object-chips">
+                <span class="chip">Laptop / Computer</span>
+                <span class="chip">Mobile Phone</span>
+                <span class="chip">Instrumentation Box</span>
+            </div>
+        </div>
+        <div class="category-group">
+            <div class="category-title">
+                <svg class="svg-icon" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                <span>Work &amp; School Essentials</span>
+            </div>
+            <div class="object-chips">
+                <span class="chip">Pen</span>
+                <span class="chip">Pencil</span>
+                <span class="chip">Notebook / Book</span>
+                <span class="chip">Bag / Backpack</span>
+            </div>
+        </div>
+        <div class="category-group">
+            <div class="category-title">
+                <svg class="svg-icon" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l8.72-8.72 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                <span>Personal Items &amp; Medical</span>
+            </div>
+            <div class="object-chips">
+                <span class="chip">Spectacles / Glasses</span>
+                <span class="chip">Water Bottle</span>
+                <span class="chip">Medicine Box</span>
+                <span class="chip">Desk / Table</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="how-it-works" class="how-it-works">
+    <h2>How Spatial Guidance Works</h2>
+    
+    <div class="workflow-steps-grid">
+        <div class="step-card">
+            <div class="step-number">1</div>
+            <h4>Launch Camera Feed</h4>
+            <p>Click "Open Live Camera" and allow browser webcam access. The AI pipeline initializes immediately.</p>
+        </div>
+        <div class="step-card">
+            <div class="step-number">2</div>
+            <h4>Present Any Object</h4>
+            <p>Position laptops, phones, bottles, books, or glasses within your webcam view.</p>
+        </div>
+        <div class="step-card">
+            <div class="step-number">3</div>
+            <h4>Speak Your Query</h4>
+            <p>Click "Ask AI" and speak e.g. <em>"Where is my mobile?"</em> or type into the text command box.</p>
+        </div>
+        <div class="step-card">
+            <div class="step-number">4</div>
+            <h4>Follow Audio &amp; Visual HUD</h4>
+            <p>View live distance meters, horizontal direction badges, and listen to spatial audio cues.</p>
+        </div>
+    </div>
+
+    <div class="disclaimer">
+        ⚠️ <strong>Notice:</strong> AI Vision Navigator provides experimental spatial guidance. Distance estimates are approximate monocular projections and should not be relied upon for safety-critical navigation.
+    </div>
+</section>
+{% endblock %}
