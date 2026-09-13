@@ -69,15 +69,15 @@
             recognition = buildRecognition();
 
             if (event.error === "network") {
-                transcriptEl.innerHTML = '<span>⚠️</span> <span>Voice recognition requires a stable internet connection.</span>';
+                transcriptEl.innerHTML = '<span>⚠️</span> <span>Voice speech recognition was blocked (Brave Shields or no network). Try <strong>Chrome / Edge</strong> or type below.</span>';
             } else if (event.error === "not-allowed" || event.error === "service-not-allowed") {
-                transcriptEl.innerHTML = '<span>⚠️</span> <span>Microphone access denied or service unavailable.</span>';
+                transcriptEl.innerHTML = '<span>⚠️</span> <span>Microphone access blocked. Please allow mic permissions in browser settings.</span>';
             } else if (event.error === "no-speech") {
-                transcriptEl.innerHTML = '<span>⚠️</span> <span>No speech detected. Please try speaking again.</span>';
+                transcriptEl.innerHTML = '<span>⚠️</span> <span>No speech detected. Please speak closer to the microphone.</span>';
             } else if (event.error === "audio-capture") {
                 transcriptEl.innerHTML = '<span>⚠️</span> <span>No microphone found or audio capture failed.</span>';
             } else {
-                transcriptEl.innerHTML = '<span>⚠️</span> <span>Voice recognition error (' + event.error + ').</span>';
+                transcriptEl.innerHTML = '<span>⚠️</span> <span>Voice recognition error (' + event.error + '). Type your command below.</span>';
             }
         };
 

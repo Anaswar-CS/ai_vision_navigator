@@ -26,6 +26,8 @@ class TargetLock:
         self.lost_announced = False
         self.last_voice_ts = 0.0
         self.last_spoken_state = None      # to detect "significant change" (Section 26)
+        self.last_spoken_direction = None
+        self.last_spoken_category = None
 
     # ------------------------------------------------------------------
     def set_target(self, canonical_class):
@@ -36,6 +38,8 @@ class TargetLock:
         self.last_seen_ts = None
         self.lost_announced = False
         self.last_spoken_state = None
+        self.last_spoken_direction = None
+        self.last_spoken_category = None
 
     def clear_target(self):
         self.set_target(None)
@@ -91,6 +95,10 @@ class TargetLock:
     def can_speak_now(self):
         return (time.monotonic() - self.last_voice_ts) >= settings.VOICE_COOLDOWN
 
-    def mark_spoken(self, state_key):
+    def mark_spoken(self, state_key, direction=None, category=None):
         self.last_voice_ts = time.monotonic()
         self.last_spoken_state = state_key
+        if direction is not None:
+            self.last_spoken_direction = direction
+        if category is not None:
+            self.last_spoken_category = category

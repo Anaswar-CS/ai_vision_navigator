@@ -160,62 +160,53 @@ class Navigator:
                         reacquired, candidate_count):
         """Implements Section 26 (cooldown + only speak on significant
         change) and Section 46 (require consistent frames before declaring
-        a movement trend)."""
+        a movement trend).
+        
+        Only triggers a spoken response when:
+        1. Target is first sighted.
+        2. Target is reacquired after being lost.
+        3. Direction changes (e.g. center -> left/right).
+        4. Distance category changes (e.g. MEDIUM -> NEAR -> VERY CLOSE).
+        
+        Stays completely silent when the object is steady in the same direction
+        and category.
+        """
 
         if not target_lock.can_speak_now():
             return None
 
-        # Target reacquired after being lost.
+        distance_label = f"approximately {round(smoothed_distance, 1)} meters" \
+            if smoothed_distance else "distance unavailable"
+
+        # 1. Target reacquired after being lost.
         if reacquired:
             target_lock.lost_announced = False
-            distance_label = f"approximately {round(smoothed_distance, 1)} meters" \
-                if smoothed_distance else "distance unavailable"
             text = responses.target_reacquired_message(target_lock.target_class, direction, distance_label)
-            target_lock.mark_spoken("reacquired")
+            target_lock.mark_spoken(f"{direction}:{category}", direction=direction, category=category)
             return text
 
-        history = list(target_lock.history)
-        if len(history) < 2:
-            # First-ever sighting this session: announce location once.
-            distance_label = f"approximately {round(smoothed_distance, 1)} meters" \
-                if smoothed_distance else "distance unavailable"
+        # 2. First sighting of target in this session.
+        if target_lock.last_spoken_direction is None and target_lock.last_spoken_category is None:
             text = responses.found_object_message(target_lock.target_class, direction, distance_label)
             if candidate_count > 1:
                 text += " " + responses.multiple_objects_message(target_lock.target_class, candidate_count)
-            target_lock.mark_spoken("first_sighting")
+            target_lock.mark_spoken(f"{direction}:{category}", direction=direction, category=category)
             return text
 
-        prev = history[-2]
-        state_key = f"{direction}:{category}"
-
-        # Direction changed significantly.
-        if prev["direction"] != direction:
-            if prev["direction"] == "center" and direction != "center":
+        # 3. Direction changed significantly.
+        if target_lock.last_spoken_direction is not None and direction != target_lock.last_spoken_direction:
+            if target_lock.last_spoken_direction == "center" and direction != "center":
                 text = responses.moved_past_message(direction)
             else:
                 text = responses.turn_message(direction)
-            target_lock.mark_spoken(state_key)
+            target_lock.mark_spoken(f"{direction}:{category}", direction=direction, category=category)
             return text
 
-        # Distance/category trend -- require N consistent frames (Section 46).
-        recent = target_lock.recent_distances(settings.NAVIGATION_CONSISTENCY_FRAMES)
-        if len(recent) >= settings.NAVIGATION_CONSISTENCY_FRAMES:
-            if all(recent[i] > recent[i + 1] for i in range(len(recent) - 1)):
-                if target_lock.last_spoken_state != f"closer:{direction}":
-                    target_lock.mark_spoken(f"closer:{direction}")
-                    if direction == "center":
-                        return responses.correct_direction_message()
-                    return responses.moving_toward_message(target_lock.target_class)
-            elif all(recent[i] < recent[i + 1] for i in range(len(recent) - 1)):
-                if target_lock.last_spoken_state != f"farther:{direction}":
-                    target_lock.mark_spoken(f"farther:{direction}")
-                    return responses.moving_away_message(target_lock.target_class)
+        # 4. Distance category changed (e.g. MEDIUM -> NEAR or NEAR -> VERY CLOSE).
+        if target_lock.last_spoken_category is not None and category != target_lock.last_spoken_category:
+            text = responses.found_object_message(target_lock.target_class, direction, distance_label)
+            target_lock.mark_spoken(f"{direction}:{category}", direction=direction, category=category)
+            return text
 
-        # Category changed (e.g. MEDIUM -> NEAR) even if direction is stable.
-        if target_lock.last_spoken_state != state_key and prev.get("category") != category:
-            target_lock.mark_spoken(state_key)
-            distance_label = f"approximately {round(smoothed_distance, 1)} meters" \
-                if smoothed_distance else "distance unavailable"
-            return responses.found_object_message(target_lock.target_class, direction, distance_label)
-
+        # Stable object in same direction and category -> STAY SILENT.
         return None
