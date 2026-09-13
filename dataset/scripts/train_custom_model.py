@@ -68,6 +68,11 @@ def main():
         "imgsz": args.imgsz,
         "batch": args.batch,
         "device": args.device,
+        "seed": 42,
+        "deterministic": True,
+        "lr0": 0.01,
+        "lrf": 0.01,
+        "cos_lr": True,
         "patience": 15,          # early stop if val metrics plateau
         "workers": 2,            # keep worker count low — target machine has 8GB RAM
         "project": str(PROJECT_ROOT / "runs" / "detect"),
