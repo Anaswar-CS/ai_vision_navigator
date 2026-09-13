@@ -1,0 +1,13 @@
+train: ../train/images
+val: ../valid/images
+test: ../test/images
+
+nc: 1
+names: ['PILL BOTTLE']
+
+roboflow:
+  workspace: 12312040-anaswar-c-s
+  project: medicine_kor-cfpkm
+  version: 1
+  license: MIT
+  url: https://universe.roboflow.com/12312040-anaswar-c-s/medicine_kor-cfpkm/dataset/1

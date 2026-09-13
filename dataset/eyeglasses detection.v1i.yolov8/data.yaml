@@ -1,0 +1,13 @@
+train: ../train/images
+val: ../valid/images
+test: ../test/images
+
+nc: 1
+names: ['eyeglasses']
+
+roboflow:
+  workspace: 12312040-anaswar-c-s
+  project: eyeglasses-detection-gpmhh-5dmv5
+  version: 1
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/12312040-anaswar-c-s/eyeglasses-detection-gpmhh-5dmv5/dataset/1
