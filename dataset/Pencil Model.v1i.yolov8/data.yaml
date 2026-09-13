@@ -1,0 +1,13 @@
+train: ../train/images
+val: ../valid/images
+test: ../test/images
+
+nc: 3
+names: ['Pencil', 'fan', 'sneaker']
+
+roboflow:
+  workspace: 12312040-anaswar-c-s
+  project: pencil-model-5sktr
+  version: 1
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/12312040-anaswar-c-s/pencil-model-5sktr/dataset/1
