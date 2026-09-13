@@ -34,13 +34,18 @@
     }
 
     function buildRecognition() {
-        if (!SpeechRecognitionImpl) return null;
+        if (!SpeechRecognitionImpl) {
+            console.warn("[VOICE] SpeechRecognition is NOT available in this browser window.");
+            return null;
+        }
+        console.log("[VOICE] Instantiating new SpeechRecognition object...");
         const r = new SpeechRecognitionImpl();
         r.lang = "en-US";
         r.continuous = false;
         r.interimResults = false;
 
         r.onstart = () => {
+            console.log("[VOICE] onstart fired: Speech recognition session is ACTIVE and listening.");
             listening = true;
             setDot(statusVoice, "processing");
             btnMic.classList.add("listening");
@@ -48,20 +53,29 @@
             transcriptEl.innerHTML = '<span>🎙️</span> <span>Listening... Speak your command now.</span>';
         };
 
+        r.onaudiostart = () => {
+            console.log("[VOICE] onaudiostart: Audio capture has started.");
+        };
+
+        r.onspeechstart = () => {
+            console.log("[VOICE] onspeechstart: User speech detected by browser.");
+        };
+
         r.onresult = (event) => {
+            console.log("[VOICE] onresult fired:", event);
             if (event.results && event.results.length > 0 && event.results[0].length > 0) {
                 const text = event.results[0][0].transcript;
+                console.log("[VOICE] Recognized text:", text);
                 transcriptEl.innerHTML = `<span>💬</span> <span>You said: <strong>"${text}"</strong></span>`;
                 sendVoiceCommand(text);
             }
         };
 
         r.onerror = (event) => {
-            // 'aborted' is a normal internal event — not a user-visible error.
+            console.error("[VOICE] onerror fired:", event.error, event);
             btnMic.classList.remove("listening");
             transcriptEl.classList.remove("speaking");
             if (event.error === "aborted") return;
-            console.error("SpeechRecognition error:", event.error, event);
             listening = false;
             started = false;
             setDot(statusVoice, "active");
@@ -82,6 +96,7 @@
         };
 
         r.onend = () => {
+            console.log("[VOICE] onend fired: Speech recognition session ended.");
             listening = false;
             started = false;
             btnMic.classList.remove("listening");
@@ -96,35 +111,38 @@
         recognition = buildRecognition();
         setDot(statusVoice, "active");
     } else {
+        console.warn("[VOICE] SpeechRecognitionImpl is null.");
         btnMic.title = "Speech recognition is not supported in this browser.";
     }
 
     btnMic.addEventListener("click", () => {
+        console.log("[VOICE] 'Ask AI Voice' button clicked. Current state: started=" + started + ", listening=" + listening);
         if (!recognition) {
+            console.error("[VOICE] Cannot start: recognition object is null.");
             alert("Speech recognition is not supported in this browser. Try Chrome or Edge, "
                 + "or use the text command box instead.");
             return;
         }
         if (started) {
-            // Session is live — stop it gracefully
+            console.log("[VOICE] Stopping active recognition session...");
             try { recognition.stop(); } catch (err) {
-                console.warn("Error stopping recognition:", err);
+                console.warn("[VOICE] Error stopping recognition:", err);
             }
             started = false;
             listening = false;
             setDot(statusVoice, "active");
         } else {
-            // No session running — start a fresh one
+            console.log("[VOICE] Calling recognition.start()...");
             try {
                 started = true;
                 recognition.start();
+                console.log("[VOICE] recognition.start() called successfully without synchronous exception.");
             } catch (err) {
-                console.error("Failed to start SpeechRecognition:", err);
+                console.error("[VOICE] Synchronous exception in recognition.start():", err);
                 started = false;
                 listening = false;
                 setDot(statusVoice, "active");
                 transcriptEl.textContent = "Could not start voice recognition. Please try again.";
-                // Rebuild for next attempt
                 recognition = buildRecognition();
             }
         }
