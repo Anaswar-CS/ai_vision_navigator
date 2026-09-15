@@ -57,6 +57,15 @@ class VisionConsumer(AsyncWebsocketConsumer):
         self.ai_frame_counter = 0
         self.last_inference_ms = 0.0
 
+        # Per-frame snapshots used by the person-to-object distance command.
+        # Stored as dicts (not DetectionResult) for safe async access.
+        # Updated on every processed frame; None until first frame arrives.
+        self._last_person_detections = []    # list of {bbox, center, distance_info}
+        self._last_object_detections = {}    # class_name -> {bbox, center, distance_info}
+        self._last_frame_width = 640
+        self._p2o_history = {}               # class_name -> deque of recent p2o distances
+
+
         await self.send(text_data=json.dumps({
             "type": "status",
             "model": self.detector.status(),
@@ -64,6 +73,7 @@ class VisionConsumer(AsyncWebsocketConsumer):
             "ai_fps": self.ai_fps,
             "device": "cpu",
         }))
+
 
     async def disconnect(self, close_code):
         # No persistent per-connection resources (no open file handles,
@@ -148,9 +158,19 @@ class VisionConsumer(AsyncWebsocketConsumer):
         detections = self.object_tracker.update(detections)
 
         # --- 4. Distance estimation per detection ---
+        #        Person detections are separated here:
+        #        • person detections  → stored in self._last_person_detections
+        #          (used by person_object_distance voice command; NOT sent in
+        #           objects_payload to the browser so they don't show as overlay
+        #           boxes in the UI)
+        #        • target objects     → stored in self._last_object_detections
+        #          AND included in objects_payload as normal
         calibration_k = calib.get_current_k()
         distances_by_index = {}
         objects_payload = []
+        person_snapshot = []
+        object_snapshot = {}
+
         for det in detections:
             distance_info = estimate_object_distance(
                 depth_map, det.bbox, class_name=det.class_name, calibration_k=calibration_k
@@ -158,13 +178,55 @@ class VisionConsumer(AsyncWebsocketConsumer):
             distances_by_index[id(det)] = distance_info
             direction = classify_direction(det.center[0], frame_width)
 
-            payload = det.as_dict()
-            payload["direction"] = direction
-            payload["distance"] = distance_info["distance_m"]
-            payload["distance_label"] = distance_info["label"]
-            payload["category"] = distance_info["category"]
-            payload["low_confidence"] = det.confidence < settings.CONFIDENCE_THRESHOLD
-            objects_payload.append(payload)
+            if det.class_name == "person":
+                # Internal-only: accumulate for person-to-object distance queries.
+                # Do NOT include in objects_payload or the UI overlay.
+                person_snapshot.append({
+                    "bbox": det.bbox,
+                    "center": det.center,
+                    "distance_info": distance_info,
+                    "confidence": det.confidence,
+                    "track_id": det.track_id,
+                })
+            else:
+                payload = det.as_dict()
+                payload["direction"] = direction
+                payload["distance"] = distance_info["distance_m"]
+                payload["distance_label"] = distance_info["label"]
+                payload["category"] = distance_info["category"]
+                payload["low_confidence"] = det.confidence < settings.CONFIDENCE_THRESHOLD
+                objects_payload.append(payload)
+
+                # Store snapshot keyed by canonical class name for fast lookup
+                # when a person_object_distance voice command arrives.
+                object_snapshot[det.class_name] = {
+                    "bbox": det.bbox,
+                    "center": det.center,
+                    "distance_info": distance_info,
+                    "confidence": det.confidence,
+                }
+
+        # Update per-session snapshots (latest frame wins)
+        self._last_person_detections = person_snapshot
+        self._last_object_detections = object_snapshot
+        self._last_frame_width = frame_width
+
+        # Record person-to-object distances in history across frames for trend tracking
+        if person_snapshot and object_snapshot:
+            from collections import deque
+            from vision.person_distance import estimate_person_to_object_distance
+            best_p = max(person_snapshot, key=lambda p: p["confidence"])
+            dp_m = best_p["distance_info"].get("distance_m")
+            p_cx = best_p["center"][0]
+
+            for o_cls, o_info in object_snapshot.items():
+                do_m = o_info["distance_info"].get("distance_m")
+                o_cx = o_info["center"][0]
+                p2o_res = estimate_person_to_object_distance(dp_m, do_m, p_cx, o_cx, frame_width)
+                if p2o_res["distance_m"] is not None:
+                    if o_cls not in self._p2o_history:
+                        self._p2o_history[o_cls] = deque(maxlen=10)
+                    self._p2o_history[o_cls].append(p2o_res["distance_m"])
 
         total_ms = (time.perf_counter() - start) * 1000.0
         self.last_inference_ms = total_ms
@@ -185,7 +247,9 @@ class VisionConsumer(AsyncWebsocketConsumer):
             "depth_ran_this_frame": run_depth,
             "device": "cpu",
             "navigation": navigation_result,
+            "persons_in_frame": len(person_snapshot),  # count only, for UI status
         }))
+
 
     # ------------------------------------------------------------------
     async def _handle_set_target(self, message):
@@ -231,6 +295,9 @@ class VisionConsumer(AsyncWebsocketConsumer):
                 "speak_text": f"Looking for your {display_name(obj)}.",
             }))
 
+        elif intent == "person_object_distance":
+            await self._handle_person_distance_command(obj)
+
         elif intent == "stop_tracking":
             self.target_lock.clear_target()
             await self.send(text_data=json.dumps({
@@ -253,6 +320,109 @@ class VisionConsumer(AsyncWebsocketConsumer):
                 "intent": "unknown",
                 "speak_text": "Sorry, I didn't understand that command.",
             }))
+
+    # ------------------------------------------------------------------
+    async def _handle_person_distance_command(self, target_obj: str | None):
+        """
+        Third-party camera scenario: estimate the distance between a detected
+        person and a target object, both visible in the current frame snapshot.
+
+        Uses the Law-of-Cosines method in vision/person_distance.py.
+        Reports clearly if either person or object is missing from the frame.
+        Does NOT interfere with existing target-lock / navigation state.
+        Uses second-person ("you") phrasing for consistency.
+        """
+        from vision.object_registry import display_name as dname
+        from vision.person_distance import estimate_person_to_object_distance, determine_movement_trend
+        from voice import responses
+
+        # ── Guard: object must be specified ──────────────────────────────────
+        if not target_obj:
+            await self.send(text_data=json.dumps({
+                "type": "voice_response",
+                "intent": "person_object_distance",
+                "speak_text": "Sorry, I didn't catch which object to measure from you.",
+            }))
+            return
+
+        # ── Guard: person must be in the latest frame snapshot ────────────────
+        persons = self._last_person_detections
+        if not persons:
+            await self.send(text_data=json.dumps({
+                "type": "voice_response",
+                "intent": "person_object_distance",
+                "speak_text": "No person detected in the camera frame right now.",
+                "person_found": False,
+                "object_found": False,
+            }))
+            return
+
+        # ── Guard: target object must be in the latest frame snapshot ─────────
+        obj_det = self._last_object_detections.get(target_obj)
+        # Also try common aliases: bag subtypes, etc.
+        if obj_det is None and target_obj in ("bag",):
+            for alias in ("bag", "backpack", "handbag", "suitcase"):
+                obj_det = self._last_object_detections.get(alias)
+                if obj_det:
+                    break
+        if obj_det is None:
+            await self.send(text_data=json.dumps({
+                "type": "voice_response",
+                "intent": "person_object_distance",
+                "speak_text": f"I can see you, but I cannot find a {dname(target_obj)} in the frame.",
+                "person_found": True,
+                "object_found": False,
+                "object": target_obj,
+            }))
+            return
+
+        # ── Select best person (highest-confidence one if multiple) ───────────
+        best_person = max(persons, key=lambda p: p["confidence"])
+        d_person_m = best_person["distance_info"].get("distance_m")
+        person_cx = best_person["center"][0]
+
+        d_object_m = obj_det["distance_info"].get("distance_m")
+        object_cx = obj_det["center"][0]
+        frame_width = self._last_frame_width
+
+        # ── Law of Cosines estimate ───────────────────────────────────────────
+        result = estimate_person_to_object_distance(
+            d_person_m=d_person_m,
+            d_object_m=d_object_m,
+            person_center_x=person_cx,
+            object_center_x=object_cx,
+            frame_width=frame_width,
+        )
+
+        trend = "stable"
+        history = self._p2o_history.get(target_obj)
+        if history:
+            trend = determine_movement_trend(history)
+
+        speak = responses.person_object_distance_message(
+            canonical_class=target_obj,
+            distance_m=result["distance_m"],
+            movement_trend=trend,
+        )
+
+        await self.send(text_data=json.dumps({
+            "type": "voice_response",
+            "intent": "person_object_distance",
+            "speak_text": speak,
+            "person_found": True,
+            "object_found": True,
+            "object": target_obj,
+            "person_to_object_m": result["distance_m"],
+            "person_to_object_label": result["label"],
+            "angle_deg": result["angle_deg"],
+            "d_person_m": result["d_person_m"],
+            "d_object_m": result["d_object_m"],
+            "source": result["source"],
+            "movement_trend": trend,
+            "unavailable_reason": result["unavailable_reason"],
+        }))
+
+
 
     # ------------------------------------------------------------------
     async def _handle_set_ai_fps(self, message):

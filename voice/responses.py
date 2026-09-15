@@ -82,3 +82,24 @@ def multiple_objects_message(canonical_class, count):
     name = display_name(canonical_class)
     plural = "s" if count != 1 else ""
     return f"{count} {name}{plural} detected. Tracking the nearest one."
+
+
+def person_object_distance_message(canonical_class, distance_m, movement_trend="stable"):
+    """
+    Generates second-person voice responses for person-to-object distance queries.
+    Movement states:
+      - moving_toward: "You are moving toward the [object]. Currently approximately X meters away."
+      - moving_away:   "You are moving away from the [object]."
+      - stable:        "You are approximately X meters from the [object]."
+    """
+    name = display_name(canonical_class)
+    if distance_m is None:
+        return f"Unable to estimate your distance to the {name}."
+
+    if movement_trend == "moving_toward":
+        return f"You are moving toward the {name}. Currently approximately {distance_m} meters away."
+    elif movement_trend == "moving_away":
+        return f"You are moving away from the {name}."
+    else:
+        return f"You are approximately {distance_m} meters from the {name}."
+

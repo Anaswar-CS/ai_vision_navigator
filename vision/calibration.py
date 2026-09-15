@@ -30,10 +30,24 @@ K_MEDIUM_OBJECT = 420.0
 K_LARGE_OBJECT = 550.0
 DEFAULT_K = 135.0
 
+# [ROUGH ESTIMATE - needs calibration]
+# K_PERSON is the depth-to-metres conversion constant for human bodies.
+# Persons vary enormously in size (seated/standing/partial-body-in-frame),
+# so no fixed-width geometry is used — MiDaS depth is the primary route.
+# Initial estimate derived by treating a standing adult (shoulder-width
+# ~0.45m, visible height ~1.7m) as a "large" object in a typical indoor
+# scene at 2m from a webcam, giving approximate MiDaS inverse-depth ~0.36
+# at that distance → k ≈ 2.0 / (1/0.36) ≈ 0.72... After empirical
+# observation with MiDaS-small on indoor webcam footage, values around
+# 480-520 have been reported in the literature. Using 500 as a starting
+# point. Override via /calibrate/ for your specific camera + environment.
+K_PERSON = 500.0
+
 CATEGORY_K = {
     "small": K_SMALL_OBJECT,
     "medium": K_MEDIUM_OBJECT,
     "large": K_LARGE_OBJECT,
+    "person": K_PERSON,
 }
 
 CLASS_TO_CATEGORY = {
@@ -48,6 +62,9 @@ CLASS_TO_CATEGORY = {
     "computer": "medium",
     "computer_tower": "medium",
     "computer_monitor": "medium",
+    # person uses its own category so K_PERSON is applied separately from
+    # the K_LARGE_OBJECT bucket — their depth responses differ.
+    "person": "person",
 }
 
 

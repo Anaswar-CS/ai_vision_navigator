@@ -250,3 +250,18 @@ DISTANCE_CATEGORIES = [
     ("MEDIUM", 1.5, 3.0),
     ("FAR", 3.0, float("inf")),
 ]
+
+# --------------------------------------------------------------------------
+# Person-to-object distance estimation (third-party camera scenario)
+# --------------------------------------------------------------------------
+
+# Horizontal field of view of the camera in degrees, used to compute the
+# angular separation between a detected person and a target object when
+# both are visible in the same frame (Law-of-Cosines triangulation).
+#
+# [ASSUMPTION — NOT A MEASURED VALUE]: Typical consumer laptop webcams
+# range from 60° to 78° horizontal FOV. 65° is a reasonable central
+# estimate. For improved accuracy, measure your specific webcam's FOV
+# (e.g. using a known-width ruler at a known distance) and override here
+# or via the CAMERA_HORIZONTAL_FOV_DEG environment variable.
+CAMERA_HORIZONTAL_FOV_DEG = _float("CAMERA_HORIZONTAL_FOV_DEG", 65.0)

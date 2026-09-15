@@ -147,6 +147,11 @@ def voice_command(request):
     if intent in ("find_object", "start_tracking") and obj:
         request.session[SESSION_TARGET_KEY] = obj
         speak_text = f"Looking for your {display_name(obj)}."
+    elif intent == "person_object_distance":
+        if obj:
+            speak_text = f"Measuring distance from you to the {display_name(obj)}."
+        else:
+            speak_text = "Sorry, I didn't catch which object to measure from you."
     elif intent == "stop_tracking":
         request.session.pop(SESSION_TARGET_KEY, None)
         speak_text = "Stopped tracking."
@@ -157,6 +162,7 @@ def voice_command(request):
         speak_text = "Sorry, I didn't understand that command."
 
     return Response({"intent": intent, "object": obj, "speak_text": speak_text})
+
 
 
 @api_view(["POST"])

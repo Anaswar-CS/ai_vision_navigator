@@ -7,6 +7,12 @@ and "smartphone" are always treated as the same canonical object:
 "mobile_phone".
 """
 
+# Internal-only class used for person-to-object distance estimation
+# (third-party camera scenario). NOT a user-facing target — users cannot
+# voice-search for "person", it is not in SUPPORTED_OBJECTS, and it is
+# never announced or shown as a navigation target.
+PERSON_INTERNAL_CLASS = "person"
+
 # Canonical object classes supported by the application (Section 7)
 SUPPORTED_OBJECTS = [
     "laptop",
@@ -114,6 +120,15 @@ OBJECT_ALIASES = {
 # "spectacles", "pencil", "medicine box", "instrumentation box" or bag
 # subtypes — those require a custom-trained model (models/custom/best.pt).
 COCO_TO_CANONICAL = {
+    # ── Internal-only: person detection for person-to-object distance ──────
+    # "person" is NOT a user-facing navigation target — it is detected
+    # silently and used only when computing person-to-object distance in
+    # third-party camera scenarios. It is explicitly listed here so the
+    # pretrained model scope filter passes it through rather than dropping
+    # it the way it drops baseball_bat, knife, and other non-target classes.
+    "person": "person",
+
+    # ── User-facing target objects ─────────────────────────────────────────
     "cell phone": "mobile_phone",
     "cellphone": "mobile_phone",
     "mobile phone": "mobile_phone",

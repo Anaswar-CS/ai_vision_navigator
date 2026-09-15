@@ -38,6 +38,24 @@ _FIND_PATTERNS = [
     r"\blocate\b",
 ]
 
+# New command intent: person-to-object distance (third-party camera scenario).
+# These patterns are SEPARATE from _FIND_PATTERNS — they must not interfere
+# with the existing "where is my [object]" flow.
+# Matched phrases (case-insensitive, after normalization):
+#   "how far is the person from the laptop"
+#   "distance between person and phone"
+#   "how far from the person to the notebook"
+#   "person to laptop distance"
+#   "how close is the person to the bag"
+_PERSON_DISTANCE_PATTERNS = [
+    r"\bhow far (is |are )?the person (from|to)\b",
+    r"\bdistance between (the )?person and\b",
+    r"\bhow far from (the )?person\b",
+    r"\bperson (to|from|and) .+ distance\b",
+    r"\bhow close is (the )?person (to|from)\b",
+    r"\bperson distance\b",
+]
+
 
 def _extract_object(text):
     """Find the first known object alias/name mentioned in the text."""
@@ -78,6 +96,13 @@ def parse_command(text):
             return {"intent": "list_objects", "object": None, "raw_text": text}
 
     obj = _extract_object(normalized_text)
+
+    # Check person-to-object distance BEFORE generic find_object patterns so
+    # "how far is the person from the laptop" is never mis-routed as a
+    # regular find_object command.
+    for pattern in _PERSON_DISTANCE_PATTERNS:
+        if re.search(pattern, normalized_text):
+            return {"intent": "person_object_distance", "object": obj, "raw_text": text}
 
     for pattern in _START_PATTERNS:
         if re.search(pattern, normalized_text):
